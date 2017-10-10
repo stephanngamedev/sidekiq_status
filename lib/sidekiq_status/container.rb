@@ -210,6 +210,7 @@ module SidekiqStatus
         conn.multi do
           conn.setex(status_key, self.ttl, data)
           conn.zadd(self.class.statuses_key, Time.now.to_f.to_s, self.jid)
+          conn.publish("status_updates", self.jid)
         end
       end
     end
@@ -262,7 +263,7 @@ module SidekiqStatus
     def pct_complete
       (at.to_f / total * 100).round
     rescue FloatDomainError, ZeroDivisionError
-      0  
+      0
     end
 
     # @param [Fixnum] at Report the progress of a job which is tracked by the current {SidekiqStatus::Container}
